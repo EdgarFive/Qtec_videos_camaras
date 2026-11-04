@@ -1,5 +1,13 @@
 # Verificación de la primera versión
 
+## Recuperación ante fallos de reproducción móvil
+
+- El usuario reportó miniatura sin reproducción en Edge y pantalla gris en Chrome móvil; confirmó reproducción correcta al abrir directamente el archivo en Drive.
+- Se amplió el alto del iframe en pantalla móvil (mínimo 320 px) y se agregaron Reintentar aquí y Abrir reproductor, con enlace directo a la vista previa en otra pestaña.
+- El reintento reemplaza únicamente el iframe; no consulta el catálogo. Se ignoran eventos error de iframes anteriores. No se considera el evento load una confirmación de reproducción.
+- Las 20 pruebas existentes y la verificación estática pasan. Estas pruebas no reproducen el bloqueo reportado en teléfonos reales.
+- Pendiente: confirmar en los dispositivos del usuario si mejora la reproducción incrustada. La salida a Drive es una alternativa explícita, no una prueba de que el iframe funcione.
+
 ## Calendario para el filtro por nombre
 
 - Se cambió el campo de texto por un calendario nativo (`input type=date`), manteniendo la fecha extraída del nombre como único criterio.

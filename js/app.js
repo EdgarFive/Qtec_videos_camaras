@@ -4,7 +4,7 @@ import { normalizeRecordings, filterRecordings, sortRecordings, durationLabel, d
 import { demoFiles } from './demo.js';
 
 const $ = id => document.getElementById(id);
-const elements = Object.fromEntries(['refresh', 'mode-banner', 'camera-name', 'folder-link', 'sync-detail', 'result-count', 'catalog-status', 'recordings', 'player', 'video-name', 'video-meta', 'drive-link', 'search', 'date', 'order', 'clear-filters', 'page-info', 'prev-page', 'next-page'].map(id => [id, $(id)]));
+const elements = Object.fromEntries(['refresh', 'mode-banner', 'camera-name', 'folder-link', 'sync-detail', 'result-count', 'catalog-status', 'recordings', 'player', 'video-name', 'video-meta', 'drive-link', 'player-actions', 'retry-player', 'open-player', 'player-message', 'search', 'date', 'order', 'clear-filters', 'page-info', 'prev-page', 'next-page'].map(id => [id, $(id)]));
 let videos = [];
 let selectedId = null;
 let selectedFile = null;
@@ -85,6 +85,25 @@ function placeholder(title, description, demo = false) {
   if (demo) content.append(textElement('span', 'demo-chip', 'DEMOSTRACIÓN · SIN VIDEO REAL'));
   elements.player.replaceChildren(content);
 }
+function mountPreview(file) {
+  const frame = document.createElement('iframe');
+  frame.title = `Reproductor de Google Drive: ${file.name}`;
+  frame.src = driveUrls(file).preview;
+  frame.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+  frame.allowFullscreen = true;
+  frame.referrerPolicy = 'strict-origin-when-cross-origin';
+  elements['player-message'].hidden = false;
+  elements['player-message'].textContent = 'Si ves una pantalla gris o el video no inicia, reintenta o abre el reproductor en Drive. La miniatura no confirma que se pueda reproducir.';
+  frame.addEventListener('error', () => {
+    // Un evento tardío de un iframe anterior no debe reemplazar el video actual.
+    if (elements.player.querySelector('iframe') !== frame) return;
+    placeholder('No se pudo cargar el reproductor', 'Puedes reintentarlo o abrir la vista previa en Drive.');
+    elements['player-message'].textContent = 'Falló la carga del reproductor. El enlace «Abrir reproductor» sigue disponible.';
+  });
+  // No usar load como prueba de reproducción: Drive puede mostrar un error interno.
+  elements.player.replaceChildren(frame);
+}
+
 function selectVideo(file) {
   const previous = selectedFile;
   selectedId = file.id;
@@ -93,21 +112,18 @@ function selectVideo(file) {
   const resolution = file.videoMediaMetadata?.width && file.videoMediaMetadata?.height ? ` · ${file.videoMediaMetadata.width} × ${file.videoMediaMetadata.height}` : '';
   elements['video-meta'].textContent = `${dateLabel(file)} · ${durationLabel(file.duration)}${resolution}`;
   elements['drive-link'].hidden = Boolean(file.demo);
+  elements['player-actions'].hidden = Boolean(file.demo);
   if (file.demo) {
+    elements['player-message'].hidden = true;
+    elements['open-player'].removeAttribute('href');
     placeholder('Grabación de ejemplo', 'La demostración no contiene videos reales.', true);
   } else {
     const urls = driveUrls(file);
     elements['drive-link'].href = urls.view;
+    elements['open-player'].href = urls.preview;
     // Mantener el iframe durante sincronizaciones y cambios de filtros.
     if (previous?.id !== file.id || previous?.resourceKey !== file.resourceKey || !elements.player.querySelector('iframe')) {
-      const frame = document.createElement('iframe');
-      frame.title = `Reproductor de Google Drive: ${file.name}`;
-      frame.src = urls.preview;
-      frame.allow = 'autoplay; fullscreen; encrypted-media';
-      frame.allowFullscreen = true;
-      frame.referrerPolicy = 'strict-origin-when-cross-origin';
-      frame.addEventListener('error', () => placeholder('No se pudo cargar el reproductor', 'Abre la grabación en Google Drive usando el enlace de abajo.'));
-      elements.player.replaceChildren(frame);
+      mountPreview(file);
     }
   }
   renderCatalog();
@@ -120,6 +136,9 @@ function clearPlayer() {
   elements['video-meta'].textContent = 'La grabación anterior ya no está disponible en el catálogo.';
   elements['drive-link'].hidden = true;
   elements['drive-link'].removeAttribute('href');
+  elements['player-actions'].hidden = true;
+  elements['player-message'].hidden = true;
+  elements['open-player'].removeAttribute('href');
 }
 function updateRefreshButton() {
   const seconds = Math.ceil(Math.max(0, client.nextAllowedAt - Date.now()) / 1000);
@@ -191,6 +210,9 @@ if (mode === 'demo') {
   placeholder('Selecciona una grabación', '', true);
 }
 elements.refresh.addEventListener('click', refresh);
+elements['retry-player'].addEventListener('click', () => {
+  if (selectedFile && !selectedFile.demo) mountPreview(selectedFile);
+});
 for (const input of [elements.search, elements.date]) input.addEventListener('input', () => { currentPage = 1; renderCatalog(); });
 elements.order.addEventListener('change', () => { currentPage = 1; renderCatalog(); });
 elements['clear-filters'].addEventListener('click', () => { elements.search.value = ''; elements.date.value = ''; elements.order.value = 'date-desc'; currentPage = 1; renderCatalog(); });
