@@ -68,6 +68,8 @@ h2 { font-size: 15px; font-weight: 550; margin: 0; }
 .date-field { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
 .date-field label { font-size: 11px; color: var(--muted); }
 .date-field input { min-width: 0; max-width: 160px; border: 0; background: transparent; color: #c4bccb; font-size: 11px; padding: 7px 0; }
+.date-field input[type="date"] { flex: 1; min-height: 38px; padding: 8px; border: 1px solid var(--border); border-radius: 5px; background: #19171b; accent-color: var(--accent); }
+.date-field input::-webkit-calendar-picker-indicator { cursor: pointer; }
 .text-button { border: 0; background: transparent; font-size: 11px; color: #ec9299; padding: 8px; margin-left: auto; }
 .catalog-status { font-size: 11px; color: var(--muted); line-height: 1.7; padding: 5px 0 9px; }
 .catalog-status.error { color: #ff959b; }

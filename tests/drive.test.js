@@ -131,11 +131,27 @@ test('fecha del nombre vence metadatos y partes se ordenan naturalmente', () => 
   ]);
   assert.deepEqual(files.map(file => file.id), ['oct1', 'oct2', 'oct10', 'sep', 'unknown']);
   assert.equal(filterRecordings(files, '', '1 octubre').length, 3);
-  assert.equal(filterRecordings(files, '', '2026-10-01').length, 0);
+  assert.equal(filterRecordings(files, '', '2026-10-01').length, 3);
   assert.equal(filterRecordings(files, '(2)', '1 oct')[0].id, 'oct2');
   assert.equal(filterRecordings(files, '', 'fecha inválida').length, 0);
   assert.equal(sortRecordings(files, 'name-asc')[0].id, 'oct1');
   assert.equal(sortRecordings(files, 'name-desc')[0].id, 'unknown');
+});
+test('calendario combina nombres sin año y con año sin usar fechas de Drive', () => {
+  const files = normalizeRecordings([
+    video('legacy', '23 sept (1).mp4'),
+    video('thisYear', '2026-09-23_08-00-00.mp4'),
+    video('otherYear', '2025-09-23.mp4'),
+    video('otherDay', '24 sept.mp4'),
+    video('noDate', 'sin_fecha.mp4'),
+  ]);
+  assert.deepEqual(filterRecordings(files, '', '2026-09-23').map(file => file.id), ['thisYear', 'legacy']);
+  assert.deepEqual(filterRecordings(files, '', '2025-09-23').map(file => file.id), ['otherYear', 'legacy']);
+  assert.equal(filterRecordings(files, '(1)', '2026-09-23')[0].id, 'legacy');
+  assert.equal(filterRecordings(files, '', '2026-09-24')[0].id, 'otherDay');
+  assert.equal(filterRecordings(files, '', '2026-02-30').length, 0);
+  assert.equal(filterRecordings(files, '', '').length, 5);
+  assert.equal(files.find(file => file.id === 'legacy').dayKey, '');
 });
 test('búsqueda y fecha se combinan, orden reciente primero, nombres tratados como datos', () => {
   const files = normalizeRecordings([video('a', '<script>2026-10-22.mp4'), video('b', 'CAM_2026-10-23.mp4')], 'America/Guatemala');

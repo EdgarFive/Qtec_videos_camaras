@@ -1,5 +1,12 @@
 # Verificación de la primera versión
 
+## Calendario para el filtro por nombre
+
+- Se cambió el campo de texto por un calendario nativo (`input type=date`), manteniendo la fecha extraída del nombre como único criterio.
+- Los nombres sin año coinciden por día y mes; los nombres con año deben coincidir también en ese año. Los archivos sin fecha no entran en un filtro de fecha activo.
+- 20 pruebas aprobadas y verificación estática correcta. En el navegador, elegir `2026-09-23` mostró cinco grabaciones `23 sept`; Limpiar restauró los 64 archivos. El selector del calendario se abrió correctamente.
+- Captura: `outputs/qtec-calendario.jpg`. Estos cambios son locales y deben subirse para actualizar GitHub Pages.
+
 ## Paleta QTEC y fechas por nombre
 
 - Paleta negra con acentos rojos, incluyendo favicon y controles oscuros.

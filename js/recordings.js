@@ -40,7 +40,15 @@ export function filterRecordings(recordings, search, day) {
   const query = search.trim().toLocaleLowerCase('es');
   const dateQuery = day.trim();
   const date = dateQuery ? filenameDate(dateQuery) : null;
-  return recordings.filter(file => (!query || file.name.toLocaleLowerCase('es').includes(query)) && (!dateQuery || (date && (date.year ? file.dayKey === date.dayKey : file.monthDay === date.monthDay))));
+  return recordings.filter(file => {
+    const matchesName = !query || file.name.toLocaleLowerCase('es').includes(query);
+    // El calendario siempre entrega un año. Los nombres históricos sin año
+    // coinciden solo por día y mes, conservando su etiqueta de año desconocido.
+    const matchesDate = !dateQuery || (date && (file.dayKey && date.year
+      ? file.dayKey === date.dayKey
+      : file.monthDay === date.monthDay));
+    return matchesName && Boolean(matchesDate);
+  });
 }
 
 export function durationLabel(ms) {
